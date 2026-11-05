@@ -17,7 +17,7 @@ export class TitleSign {
 
     this.material = new THREE.MeshBasicMaterial({
       map: this.texture,
-      color: new THREE.Color(0.62, 0.64, 0.7),
+      color: new THREE.Color(0.72, 0.69, 0.63),
       transparent: true,
       depthWrite: false,
       fog: false,

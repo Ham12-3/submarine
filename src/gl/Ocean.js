@@ -9,10 +9,11 @@ const skyChunk = /* glsl */ `
 
   vec3 skyColor(vec3 d) {
     float h = d.y;
-    vec3 col = mix(uSkyHorizon, uSkyMid, smoothstep(0.0, 0.16, h));
-    col = mix(col, uSkyTop, smoothstep(0.12, 0.65, h));
+    // warmth stays in a thin band on the horizon; the sky above cools to blue-grey
+    vec3 col = mix(uSkyHorizon, uSkyMid, smoothstep(0.0, 0.085, h));
+    col = mix(col, uSkyTop, smoothstep(0.1, 0.55, h));
     float s = max(dot(d, uSunDir), 0.0);
-    col += uSunColor * (pow(s, 1400.0) * 2.2 + pow(s, 60.0) * 0.16 + pow(s, 6.0) * 0.07 * (1.0 - smoothstep(0.0, 0.4, h)));
+    col += uSunColor * (pow(s, 1400.0) * 2.2 + pow(s, 60.0) * 0.14 + pow(s, 6.0) * 0.035 * (1.0 - smoothstep(0.0, 0.3, h)));
     return col;
   }
 `;
@@ -83,8 +84,55 @@ const surfaceFrag = /* glsl */ `
   uniform float uFogDensity;
   uniform vec3 uWindow;
   uniform vec3 uTIR;
+  uniform vec4 uFoamA; // hull waterline centre (x, z) and heading (x, z)
+  uniform vec4 uFoamB; // half-length, half-beam, amount
   varying vec3 vWorld;
   varying float vH;
+
+  float hash12(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+  }
+
+  float vnoise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash12(i), hash12(i + vec2(1.0, 0.0)), u.x),
+               mix(hash12(i + vec2(0.0, 1.0)), hash12(i + vec2(1.0, 1.0)), u.x), u.y);
+  }
+
+  // White water where the hull breaks the surface: a broken rim round the waterline,
+  // a heavier cushion at the bow, diverging bow waves and a short wake.
+  float hullFoam(vec2 p) {
+    if (uFoamB.z < 0.001) return 0.0;
+    vec2 rel = p - uFoamA.xy;
+    vec2 dir = uFoamA.zw;
+    vec2 lp = vec2(dot(rel, dir), dot(rel, vec2(-dir.y, dir.x)));
+    float half_ = uFoamB.x;
+    float beam = uFoamB.y;
+    float d = length(vec2(lp.x - clamp(lp.x, -half_, half_), lp.y)) - beam;
+
+    float n = vnoise(lp * 2.4 + vec2(uTime * 0.45, 0.0)) * 0.5
+            + vnoise(lp * 7.0 - vec2(uTime * 0.3, uTime * 0.7)) * 0.32
+            + vnoise(lp * 19.0 + uTime * 1.3) * 0.18;
+
+    float bowBias = 0.55 + 0.8 * smoothstep(-half_, half_ + beam, lp.x);
+    float rim = smoothstep(0.75, 0.0, d) * smoothstep(-0.2, 0.05, d) * bowBias;
+
+    float fromBow = half_ + beam - lp.x;
+    float kelvin = exp(-pow((abs(lp.y) - (beam + fromBow * 0.34)) / 0.32, 2.0))
+                 * step(0.0, fromBow) * exp(-fromBow * 0.09) * 0.7;
+
+    float aft = -lp.x - half_;
+    float spread = beam + 0.3 + max(aft, 0.0) * 0.16;
+    float wake = step(0.0, aft) * exp(-aft * 0.1) * smoothstep(spread, spread * 0.25, abs(lp.y)) * 0.8;
+
+    float m = max(rim, max(kelvin, wake));
+    // patchy, never a solid line
+    return smoothstep(0.52, 0.82, n + m * 0.32) * m * uFoamB.z * 0.85;
+  }
 
   void main() {
     float dist = length(cameraPosition - vWorld);
@@ -109,6 +157,10 @@ const surfaceFrag = /* glsl */ `
       col = mix(body, refl, F);
       float glint = pow(max(dot(R, uSunDir), 0.0), 900.0);
       col += uSunColor * glint * 2.4;
+
+      float foam = hullFoam(vWorld.xz);
+      vec3 foamCol = mix(vec3(0.46, 0.48, 0.47), uSunColor * 0.6, 0.2) * (0.6 + 0.4 * n.y);
+      col = mix(col, foamCol, clamp(foam, 0.0, 0.92));
     } else {
       // ── seen from below: Snell's window + total internal reflection
       vec3 I = normalize(vWorld - cameraPosition);
@@ -237,11 +289,11 @@ export class Ocean {
 
     const sunDir = new THREE.Vector3(0.05, 0.055, -1).normalize();
     this.skyUniforms = {
-      uSkyTop: { value: new THREE.Color('#020a16') },
-      uSkyMid: { value: new THREE.Color('#081d33') },
-      uSkyHorizon: { value: new THREE.Color('#5e3436') },
+      uSkyTop: { value: new THREE.Color('#060c10') },
+      uSkyMid: { value: new THREE.Color('#1a2a30') },
+      uSkyHorizon: { value: new THREE.Color('#5e4d40') },
       uSunDir: { value: sunDir },
-      uSunColor: { value: new THREE.Color(1.0, 0.42, 0.28) },
+      uSunColor: { value: new THREE.Color(1.0, 0.7, 0.4) },
     };
 
     // ── sky dome (follows the camera)
@@ -263,12 +315,14 @@ export class Ocean {
     this.surfaceUniforms = {
       ...this.skyUniforms,
       uTime: { value: 0 },
-      uDeep: { value: new THREE.Color('#031726') },
-      uScatter: { value: new THREE.Color('#0d4258') },
+      uDeep: { value: new THREE.Color('#041013') },
+      uScatter: { value: new THREE.Color('#123a3d') },
       uFogColor: { value: new THREE.Color() },
       uFogDensity: { value: 0.003 },
-      uWindow: { value: new THREE.Color('#2f7d96') },
-      uTIR: { value: new THREE.Color('#0a3a52') },
+      uWindow: { value: new THREE.Color('#2f6f70') },
+      uTIR: { value: new THREE.Color('#0b3236') },
+      uFoamA: { value: new THREE.Vector4(0, 0, 1, 0) },
+      uFoamB: { value: new THREE.Vector4(0, 0, 0, 0) },
     };
     this.surface = new THREE.Mesh(
       polarPlane(1400, 170, 160),
@@ -296,7 +350,7 @@ export class Ocean {
           uTime: { value: 0 },
           uPhase: { value: rnd() * 10 },
           uHeight: { value: H },
-          uColor: { value: new THREE.Color(0.45, 0.8, 1.0) },
+          uColor: { value: new THREE.Color(0.62, 0.86, 0.82) },
         },
         vertexShader: rayVert,
         fragmentShader: rayFrag,
@@ -315,6 +369,18 @@ export class Ocean {
       this.rays.add(m);
     }
     this.group.add(this.rays);
+  }
+
+  /** Feed the hull's waterline capsule (from Submarine.waterline) to the foam, or clear it. */
+  setFoam(wl) {
+    const a = this.surfaceUniforms.uFoamA.value;
+    const b = this.surfaceUniforms.uFoamB.value;
+    if (!wl) {
+      b.z = 0;
+      return;
+    }
+    a.set(wl.x, wl.z, wl.dirX, wl.dirZ);
+    b.set(wl.halfLen, wl.radius, wl.amount, 0);
   }
 
   update(t, camera, { fogColor, fogDensity, underwater, rayStrength }) {

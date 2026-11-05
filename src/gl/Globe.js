@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { PALETTE } from '../palette.js';
 
 const DEG = Math.PI / 180;
 
@@ -60,7 +61,7 @@ const pointVert = /* glsl */ `
     float facing = dot(nView, normalize(-mv.xyz));
     float tw = 0.7 + 0.3 * sin(uTime * 1.3 + aRand * 40.0);
     vAlpha = smoothstep(-0.05, 0.45, facing) * mix(0.2, 0.95, aLand) * tw * uOpacity;
-    vColor = mix(vec3(0.42, 0.56, 0.7), vec3(1.0, 0.97, 0.94), aLand);
+    vColor = mix(vec3(0.33, 0.4, 0.41), vec3(0.91, 0.89, 0.84), aLand);
     gl_PointSize = uSize * mix(0.75, 1.15, aLand) * uPixelRatio / -mv.z;
     gl_Position = projectionMatrix * mv;
   }
@@ -115,8 +116,8 @@ const haloFrag = /* glsl */ `
   varying vec3 vV;
   void main() {
     float rim = pow(1.0 - abs(dot(normalize(vN), normalize(vV))), 2.6);
-    vec3 col = mix(vec3(0.25, 0.45, 0.65), vec3(0.95, 0.43, 0.3), rim * 0.6);
-    float a = rim * 0.35 * uOpacity;
+    vec3 col = mix(vec3(0.3, 0.42, 0.42), vec3(0.85, 0.82, 0.74), rim * 0.5);
+    float a = rim * 0.2 * uOpacity;
     gl_FragColor = vec4(col * a, a);
   }
 `;
@@ -202,12 +203,12 @@ export class Globe {
     // dive-site markers + arcs from home port
     this.markers = [];
     this.arcs = [];
-    const coral = new THREE.Color('#f26e4e');
+    const accent = new THREE.Color(PALETTE.accent);
     const home = latLonToVec(HOME.lat, HOME.lon, 1.0);
     const dotGeo = new THREE.SphereGeometry(0.014, 12, 8);
     const ringGeo = new THREE.RingGeometry(0.03, 0.036, 48);
     this.markerMat = new THREE.MeshBasicMaterial({
-      color: coral.clone().multiplyScalar(2),
+      color: accent.clone().multiplyScalar(1.5),
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
@@ -224,7 +225,7 @@ export class Globe {
       this.spin.add(dot);
 
       const ringMat = new THREE.MeshBasicMaterial({
-        color: coral.clone().multiplyScalar(2),
+        color: accent.clone().multiplyScalar(1.3),
         transparent: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
@@ -248,7 +249,7 @@ export class Globe {
       const au = {
         uHead: { value: 0 },
         uOpacity: { value: 0 },
-        uColor: { value: coral.clone().multiplyScalar(1.6) },
+        uColor: { value: accent.clone().multiplyScalar(1.2) },
       };
       const arc = new THREE.Line(
         ag,

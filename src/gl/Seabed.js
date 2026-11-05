@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { PALETTE } from '../palette.js';
 
 // Small deterministic value-noise + fBm for the terrain
 function hash(x, y) {
@@ -60,11 +61,11 @@ export class Seabed {
       uPingOrigin: { value: new THREE.Vector3() },
       uPingRadius: { value: 0 },
       uContour: { value: 0 },
-      uContourColor: { value: new THREE.Color('#f26e4e') },
+      uContourColor: { value: new THREE.Color(PALETTE.accent) }, // amber sonar trace
     };
 
     const mat = new THREE.MeshStandardMaterial({
-      color: 0x2a3540,
+      color: 0x2b3233,
       roughness: 0.95,
       metalness: 0.0,
     });

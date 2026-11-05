@@ -57,7 +57,7 @@ export class MarineSnow {
       uSize: { value: 95 },
       uPixelRatio: { value: 1 },
       uOpacity: { value: 0 },
-      uColor: { value: new THREE.Color(0.75, 0.88, 1.0) },
+      uColor: { value: new THREE.Color(0.82, 0.88, 0.84) },
     };
     this.points = new THREE.Points(
       g,
@@ -106,7 +106,7 @@ const bubbleFrag = /* glsl */ `
     float rim = smoothstep(0.32, 0.47, d) * (1.0 - smoothstep(0.47, 0.5, d));
     float hi = smoothstep(0.16, 0.0, length(c - vec2(-0.14, -0.14)));
     float a = (rim * 0.75 + hi * 0.9 + 0.06) * vAlpha * uOpacity;
-    gl_FragColor = vec4(vec3(0.8, 0.93, 1.0) * a, a);
+    gl_FragColor = vec4(vec3(0.85, 0.92, 0.9) * a, a);
   }
 `;
 

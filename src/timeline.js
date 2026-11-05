@@ -28,6 +28,7 @@ export function measure() {
   const hero = $('hero');
   return {
     vh,
+    aspect: window.innerWidth / vh,
     portrait: window.innerWidth / vh < 0.9,
     heroRange: hero.offsetHeight - vh,
     descent: center($('descent'), vh),
@@ -45,11 +46,20 @@ export function measure() {
 export function buildKeys(m) {
   const H = (f) => m.heroRange * f;
   const P = m.portrait;
+  // half the visible width at a given camera distance (landscape fov is 35°), so side-framed
+  // shots keep the sub inside the right half on near-square windows as well as wide ones
+  const halfW = (dist) => Math.tan((17.5 * Math.PI) / 180) * dist * m.aspect;
+  const engScale = Math.min(0.56, 0.071 * halfW(16)); // hull is 12.4 units long
+  const engX = Math.min(4.0, 0.5 * halfW(16));
+  const safetyX = Math.min(5.6, 0.62 * halfW(17.5));
+  // the surfaced bow-on shot needs more room on squarer windows
+  const heroPull = Math.max(1, Math.pow(1.75 / m.aspect, 0.5));
+  const heroBias = Math.max(0, 1.75 - m.aspect) * 1.6; // favour the bow; let the stern crop
 
   const keys = [
-    // ── surface: sub idling in front of the wordmark at dusk
-    { at: 0, lin: true, cam: [0, 1.9, P ? 26 : 19], look: [0, 2.6, 0], sub: [0.4, -0.62, 0], rot: [-0.32, 0, 0], title: 1 },
-    { at: H(0.14), lin: true, cam: [0, 1.5, P ? 22 : 16.5], look: [0.3, 1.6, 0], sub: [0.8, -0.6, 0], rot: [-0.12, 0, 0], title: 1 },
+    // ── surface: low, close three-quarter bow view so the boat looms over the camera
+    { at: 0, lin: true, cam: [0, 0.85, P ? 22 : 13 * heroPull], look: [0.9 + heroBias, 2.0, 0], sub: [0.8, -0.3, 0], rot: [-0.55, 0, 0], title: 1 },
+    { at: H(0.14), lin: true, cam: [0, 0.75, P ? 19 : 11.2 * heroPull], look: [1.2 + heroBias, 1.6, 0], sub: [1.1, -0.3, 0], rot: [-0.4, 0, 0], title: 1 },
     // ── dive (linear segments so the descent never stalls mid-hero)
     { at: H(0.3), lin: true, cam: [0, 1.1, 14], look: [1.2, -1.2, -1], sub: [2, -2.6, -2.4], rot: [0.3, -0.3, 0.04], title: 0.3 },
     { at: H(0.4), lin: true, cam: [-0.3, -2.6, 13], look: [1.8, -5.6, -2], sub: [2.6, -6.4, -4], rot: [0.45, -0.36, 0.05], depth: 6 },
@@ -72,9 +82,9 @@ export function buildKeys(m) {
       at: m.engineering,
       cam: [0, -110, 16],
       look: [0, -110, 0],
-      sub: P ? [0, -111.2, 0] : [4.0, -110.3, 0],
+      sub: P ? [0, -111.2, 0] : [engX, -110.3, 0],
       rot: [-0.22, 0, 0],
-      scale: P ? 0.5 : 0.56,
+      scale: P ? 0.5 : engScale,
       depth: 1400,
       beams: 0.55,
       hot: 1,
@@ -90,7 +100,7 @@ export function buildKeys(m) {
       at: m.safety,
       cam: [0, -250, 16],
       look: [0, -250, 0],
-      sub: P ? [0, -253, -6] : [5.6, -250.8, -1.5],
+      sub: P ? [0, -253, -6] : [safetyX, -250.8, -1.5],
       rot: [-2.3, 0.02, 0],
       scale: P ? 0.7 : 0.9,
       depth: 6800,

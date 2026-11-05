@@ -1,9 +1,9 @@
 // [title, detail, leader direction, text alignment relative to the leader, minor (dot only on phones)]
 const LABELS = {
   hull: ['TITANIUM PRESSURE HULL', '90 MM FORGED Ti-6Al-4V', 'down', 'end', false],
-  sail: ['SAIL & MAST ARRAY', 'SONAR · COMMS · NAV', 'up', 'start', false],
+  sail: ['FIN & MAST ARRAY', 'OPTRONICS · COMMS · ESM', 'up', 'end', false],
   lights: ['LED FLOODLIGHTS', '2 × 60,000 LUMENS', 'down', 'end', false],
-  stern: ['X-FORM STERN PLANES', '6-AXIS ATTITUDE CONTROL', 'down', 'end', true],
+  stern: ['CRUCIFORM STERN', 'END-PLATED PLANES', 'down', 'end', true],
   pumpjet: ['PUMP-JET PROPULSOR', 'ACOUSTICALLY QUIET', 'up', 'start', true],
 };
 

@@ -1,4 +1,5 @@
 // SVG artwork for the fleet carousel (technical blueprints) and the heritage cards.
+import { PALETTE } from '../palette.js';
 
 const dimLine = (x1, x2, label) => `
   <line x1="${x1}" y1="130" x2="${x2}" y2="130" class="bp"/>
@@ -138,29 +139,25 @@ export const VEHICLES = [
 
 // ── Heritage cards ─────────────────────────────────────────────
 
-const C = '#f26e4e';
-const glow = 'rgba(255,196,160,0.7)';
-const hull = '#0b1b28';
+const C = PALETTE.accent;
+const glow = 'rgba(255,214,160,0.75)'; // lamp light through a porthole
+const hull = '#0d1517';
 
+// water-column vignette: daylight blue-green at the top fading to ink, with two light shafts
 const scene = (id, inner) => `
   <svg viewBox="0 0 160 200" aria-hidden="true">
     <defs>
       <linearGradient id="hg${id}" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#1c5470"/>
-        <stop offset="0.5" stop-color="#0a2238"/>
-        <stop offset="1" stop-color="#030c16"/>
+        <stop offset="0" stop-color="#1f4a4c"/>
+        <stop offset="0.5" stop-color="#0b1e21"/>
+        <stop offset="1" stop-color="#05090b"/>
       </linearGradient>
-      <radialGradient id="hl${id}" cx="0.5" cy="0.6" r="0.5">
-        <stop offset="0" stop-color="rgba(242,110,78,0.28)"/>
-        <stop offset="1" stop-color="rgba(242,110,78,0)"/>
-      </radialGradient>
     </defs>
     <rect width="160" height="200" fill="url(#hg${id})"/>
-    <path d="M26 0 L46 0 L92 200 L58 200 Z" fill="rgba(170,220,255,0.07)"/>
-    <path d="M92 0 L104 0 L134 200 L110 200 Z" fill="rgba(170,220,255,0.05)"/>
-    <rect width="160" height="200" fill="url(#hl${id})"/>
+    <path d="M26 0 L46 0 L92 200 L58 200 Z" fill="rgba(200,230,222,0.06)"/>
+    <path d="M92 0 L104 0 L134 200 L110 200 Z" fill="rgba(200,230,222,0.04)"/>
     ${inner}
-    <g fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="0.7">
+    <g fill="none" stroke="rgba(233,227,213,0.32)" stroke-width="0.7">
       <circle cx="122" cy="42" r="2.4"/><circle cx="128" cy="30" r="1.6"/><circle cx="118" cy="20" r="1.2"/>
       <circle cx="36" cy="150" r="1.8"/><circle cx="30" cy="138" r="1.2"/>
     </g>
@@ -176,12 +173,12 @@ export const HERITAGE = [
     art: (id) =>
       scene(
         id,
-        `<line x1="80" y1="0" x2="80" y2="70" stroke="rgba(255,255,255,.55)" stroke-width="1"/>
+        `<line x1="80" y1="0" x2="80" y2="70" stroke="rgba(233,227,213,.55)" stroke-width="1"/>
          <rect x="72" y="64" width="16" height="8" fill="${hull}" stroke="${C}"/>
          <circle cx="80" cy="106" r="34" fill="${hull}" stroke="${C}" stroke-width="1.5"/>
-         <circle cx="68" cy="100" r="6" fill="${glow}" stroke="#fff" stroke-width=".8"/>
-         <circle cx="92" cy="100" r="6" fill="${glow}" stroke="#fff" stroke-width=".8"/>
-         <circle cx="80" cy="122" r="5" fill="none" stroke="#fff" stroke-width=".8"/>
+         <circle cx="68" cy="100" r="6" fill="${glow}" stroke="#e9e3d5" stroke-width=".8"/>
+         <circle cx="92" cy="100" r="6" fill="${glow}" stroke="#e9e3d5" stroke-width=".8"/>
+         <circle cx="80" cy="122" r="5" fill="none" stroke="#e9e3d5" stroke-width=".8"/>
          <path d="M46 106 h-8 M114 106 h8" stroke="${C}"/>`,
       ),
   },
@@ -197,9 +194,9 @@ export const HERITAGE = [
         `<path d="M20 86 C20 74 32 70 50 70 L118 70 C134 70 142 76 142 86 C142 96 134 100 118 100 L50 100 C32 100 20 96 20 86 Z" fill="${hull}" stroke="${C}" stroke-width="1.5"/>
          <path d="M70 70 L72 56 L90 56 L92 70" fill="${hull}" stroke="${C}"/>
          <line x1="81" y1="100" x2="81" y2="112" stroke="${C}"/>
-         <circle cx="81" cy="128" r="15" fill="${hull}" stroke="#fff" stroke-width="1"/>
+         <circle cx="81" cy="128" r="15" fill="${hull}" stroke="#e9e3d5" stroke-width="1"/>
          <circle cx="75" cy="126" r="3.5" fill="${glow}"/>
-         <path d="M32 100 v10 M130 100 v10" stroke="rgba(255,255,255,.5)"/>`,
+         <path d="M32 100 v10 M130 100 v10" stroke="rgba(233,227,213,.5)"/>`,
       ),
   },
   {
@@ -211,12 +208,12 @@ export const HERITAGE = [
     art: (id) =>
       scene(
         id,
-        `<path d="M26 112 C26 98 40 92 58 92 L110 92 C126 92 136 102 136 112 C136 122 126 130 110 130 L58 130 C40 130 26 124 26 112 Z" fill="#dfe5ea" stroke="#fff"/>
+        `<path d="M26 112 C26 98 40 92 58 92 L110 92 C126 92 136 102 136 112 C136 122 126 130 110 130 L58 130 C40 130 26 124 26 112 Z" fill="#e3ddd0" stroke="#e9e3d5"/>
          <path d="M62 92 L66 76 L90 76 L94 92 Z" fill="${C}"/>
          <circle cx="122" cy="118" r="4" fill="${glow}" stroke="${hull}"/>
-         <path d="M128 124 L146 132 L152 126" stroke="#fff" fill="none" stroke-width="1.4"/>
-         <rect x="96" y="130" width="26" height="8" fill="none" stroke="#fff" stroke-width=".8"/>
-         <rect x="14" y="104" width="12" height="14" rx="2" fill="${hull}" stroke="#fff" stroke-width=".8"/>`,
+         <path d="M128 124 L146 132 L152 126" stroke="#e9e3d5" fill="none" stroke-width="1.4"/>
+         <rect x="96" y="130" width="26" height="8" fill="none" stroke="#e9e3d5" stroke-width=".8"/>
+         <rect x="14" y="104" width="12" height="14" rx="2" fill="${hull}" stroke="#e9e3d5" stroke-width=".8"/>`,
       ),
   },
   {
@@ -229,9 +226,9 @@ export const HERITAGE = [
       scene(
         id,
         `<path d="M80 28 C93 28 99 44 99 60 L99 138 C99 150 91 156 80 156 C69 156 61 150 61 138 L61 60 C61 44 67 28 80 28 Z" fill="${hull}" stroke="${C}" stroke-width="1.5"/>
-         <circle cx="80" cy="146" r="12" fill="${hull}" stroke="#fff"/>
+         <circle cx="80" cy="146" r="12" fill="${hull}" stroke="#e9e3d5"/>
          <circle cx="80" cy="146" r="4" fill="${glow}"/>
-         <path d="M99 70 L128 58 M61 70 L32 58" stroke="#fff" stroke-width="1"/>
+         <path d="M99 70 L128 58 M61 70 L32 58" stroke="#e9e3d5" stroke-width="1"/>
          <circle cx="128" cy="58" r="3" fill="${glow}"/><circle cx="32" cy="58" r="3" fill="${glow}"/>
          <path d="M68 40 h24" stroke="${C}"/>`,
       ),
@@ -247,10 +244,10 @@ export const HERITAGE = [
         id,
         `<path d="M24 98 L116 98 L134 110 L134 132 L24 132 Z" fill="${hull}" stroke="${C}" stroke-width="1.5"/>
          <rect x="40" y="84" width="60" height="14" fill="${hull}" stroke="${C}"/>
-         <circle cx="114" cy="118" r="9" fill="${glow}" stroke="#fff"/>
-         <rect x="12" y="104" width="12" height="10" rx="2" fill="none" stroke="#fff" stroke-width=".8"/>
-         <rect x="12" y="118" width="12" height="10" rx="2" fill="none" stroke="#fff" stroke-width=".8"/>
-         <path d="M40 140 h80" stroke="rgba(255,255,255,.5)"/>`,
+         <circle cx="114" cy="118" r="9" fill="${glow}" stroke="#e9e3d5"/>
+         <rect x="12" y="104" width="12" height="10" rx="2" fill="none" stroke="#e9e3d5" stroke-width=".8"/>
+         <rect x="12" y="118" width="12" height="10" rx="2" fill="none" stroke="#e9e3d5" stroke-width=".8"/>
+         <path d="M40 140 h80" stroke="rgba(233,227,213,.5)"/>`,
       ),
   },
 ];

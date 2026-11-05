@@ -21,16 +21,16 @@ const smooth = (a, b, v) => {
 
 // Underwater fog by camera height: [y, colour, density]
 const FOG_STOPS = [
-  [0, new THREE.Color('#0d4a62'), 0.019],
-  [-40, new THREE.Color('#0a344d'), 0.02],
-  [-110, new THREE.Color('#072439'), 0.021],
-  [-200, new THREE.Color('#05182b'), 0.022],
-  [-300, new THREE.Color('#03101e'), 0.023],
-  [-430, new THREE.Color('#020b15'), 0.024],
+  [0, new THREE.Color('#0f3f45'), 0.019],
+  [-40, new THREE.Color('#0b2f34'), 0.02],
+  [-110, new THREE.Color('#082227'), 0.021],
+  [-200, new THREE.Color('#06171b'), 0.022],
+  [-300, new THREE.Color('#050f12'), 0.023],
+  [-430, new THREE.Color('#04090b'), 0.024],
 ];
-const ABOVE_FOG = new THREE.Color('#4a3340');
-const WARM = new THREE.Color('#ffb898');
-const COOL = new THREE.Color('#7fb6dc');
+const ABOVE_FOG = new THREE.Color('#3a3835');
+const WARM = new THREE.Color('#ffc890');
+const COOL = new THREE.Color('#86b9b4');
 
 export const SEABED_Y = -412;
 
@@ -59,12 +59,12 @@ export class World {
     pmrem.dispose();
 
     // ── lights
-    this.hemi = new THREE.HemisphereLight(0x9ec9ff, 0x0b1520, 1);
-    this.key = new THREE.DirectionalLight(0xffb898, 2);
+    this.hemi = new THREE.HemisphereLight(0xa9c6c2, 0x0a1113, 1);
+    this.key = new THREE.DirectionalLight(0xffc890, 2);
     this.key.position.set(-10, 30, -25);
-    this.rim = new THREE.DirectionalLight(0xf26e4e, 1.3);
+    this.rim = new THREE.DirectionalLight(0xd9b07a, 1.3);
     this.rim.position.set(-30, 6, -28);
-    this.fill = new THREE.DirectionalLight(0x6fa8ff, 0.5);
+    this.fill = new THREE.DirectionalLight(0x8fb7c0, 0.5);
     this.fill.position.set(22, 8, 30);
     this.scene.add(this.hemi, this.key, this.rim, this.fill);
 
@@ -110,8 +110,9 @@ export class World {
     this._v = new THREE.Vector3();
     this._fog = new THREE.Color();
     this._origins = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
-    this._ventL = new THREE.Vector3(0.6, 0.9, 0.5);
-    this._ventR = new THREE.Vector3(2.6, 0.9, -0.5);
+    this._ventL = new THREE.Vector3(0.2, 0.66, 0.3);
+    this._ventR = new THREE.Vector3(3.6, 0.66, -0.3);
+    this._wl = {};
     this.prevSubY = 0;
 
     this.resize();
@@ -227,7 +228,9 @@ export class World {
       rayStrength: rays,
     });
 
-    // ── title
+    // ── title: stays centred on the line of sight even when the shot is biased toward the bow
+    const tz = this.title.mesh.position.z;
+    this.title.mesh.position.x = s.cam[0] + ((s.look[0] - s.cam[0]) * (s.cam[2] - tz)) / Math.max(s.cam[2], 1);
     this.title.material.opacity = underwater ? 0 : s.title;
     this.title.mesh.visible = this.title.material.opacity > 0.002;
 
@@ -238,7 +241,9 @@ export class World {
       beams: s.beams,
       envDim: 1 - depth01,
       speed: clamp(Math.abs(subDy) / 8),
+      surfaced: smooth(-1.4, -0.5, g.position.y),
     });
+    this.ocean.setFoam(this.ocean.surface.visible && this.sub.waterline(this._wl) ? this._wl : null);
 
     // ── particles
     const pr = this.pixelRatio;
@@ -260,8 +265,9 @@ export class World {
     if (this.globePass.enabled) this.globe.update(t, s.globe, s.globeSpin, pr);
 
     // ── post
-    this.bloom.strength = underwater ? lerp(0.6, 0.95, depth01) : 0.35;
-    this.bloom.threshold = underwater ? 0.82 : 0.95;
+    // bloom only for real light sources (floodlights, strobe), never as a decorative haze
+    this.bloom.strength = underwater ? lerp(0.4, 0.62, depth01) : 0.25;
+    this.bloom.threshold = underwater ? 0.85 : 0.95;
 
     this.composer.render(dt);
   }
